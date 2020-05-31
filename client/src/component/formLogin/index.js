@@ -1,32 +1,63 @@
-import React, { Component } from "react";
+import React, { useContext, useState } from "react";
+import { AppContext } from "../../App";
 
-class LoginForm extends Component {
-  state = {
-    username: "",
-    password: "",
-  };
-  handleUserChange = (e) => {
-    this.setState({ username: e.target.username });
-  };
-  handlePasswordChange = (e) => {
-    this.setState({ password: e.target.password });
-  };
+const LoginForm = () => {
+  const context = useContext(AppContext);
+  const userStore = context.userStore;
+  const [inputUsername, setInputUsername] = useState();
+  const [inputPassword, setInputPassword] = useState();
 
-  handleSubmit = (e) => {
+  const handleUsernameChange = (e) => {
+    let inputUsername = e.target.value;
+    setInputUsername(inputUsername);
+  };
+  const handlePasswordChange = (e) => {
+    let inputPassword = e.target.value;
+    setInputPassword(inputPassword);
+  };
+  const doLogin = (e) => {
     e.preventDefault();
-  };
+    if (!inputUsername) {
+      return;
+    }
+    if (!inputPassword) {
+      return;
+    }
 
-  render() {
-    return (
-      <form className="formLogin" onSubmit={this.handleSubmit}>
+    let data = {
+      inputUsername,
+      inputPassword,
+    };
+    fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res && res.success) {
+          console.log(res);
+          userStore.username.set(res.username);
+          userStore.isLoggedIn.set(true);
+          console.log(userStore);
+        } else if (res && res.success === false) {
+          alert(res.msg);
+        }
+      });
+  };
+  return (
+    <div>
+      <form className="formLogin" onSubmit={doLogin}>
         <h2>Log In</h2>
         <div>
           <input
             type="text"
             placeholder="Username"
             name="username"
-            onChange={this.handleUserChange}
-            value={this.state.username}
+            onChange={handleUsernameChange}
+            value={inputUsername}
           />
         </div>
         <div>
@@ -34,14 +65,14 @@ class LoginForm extends Component {
             type="password"
             placeholder="password"
             name="password"
-            onChange={this.handlePasswordChange}
-            value={this.state.password}
+            onChange={handlePasswordChange}
+            value={inputPassword}
           />
         </div>
         <button>Login</button>
       </form>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default LoginForm;
